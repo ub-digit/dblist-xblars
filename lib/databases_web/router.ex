@@ -19,13 +19,18 @@ defmodule DatabasesWeb.Router do
 
     #get "/", PageController, :index
     get "/", DatabaseController, :index
-    get "/database", DatabaseController, :index
-    get "/database/:lang", DatabaseController, :index_with_lang
-    get "/database/:lang/:id", DatabaseController, :show
+    get "/databases/popular", DatabaseController, :get_popular_databases
+    get "/databases", DatabaseController, :index
+    #get "/databases", DatabaseController, :index_with_lang
+    #get "/database/:lang", DatabaseController, :index_with_lang
+    get "/databases/:id", DatabaseController, :show
     get "/publisher", PublisherController, :index
     get "/relations", DatabaseController, :show_database_publisher 
     get "/topics/:lang", TopicController, :index
+    get "/search/:lang/", SearchController, :index_with_lang
     get "/search/:lang/:term", SearchController, :index_with_lang
+    get "/search/:term", SearchController, :test_search
+
   end
 
   # Other scopes may use custom stacks.

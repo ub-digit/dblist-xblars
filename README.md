@@ -1,3 +1,7 @@
+# Elasticsearch
+
+run 'docker-compose up -d'  to start elasticsearch
+
 # Databases
 
 To start your Phoenix server:

@@ -6,11 +6,10 @@ defmodule Databases.Model.Topic do
   schema "topics" do
     field :name_en, :string
     field :name_sv, :string
-    field :parent_topic_id, :integer
     has_many :topic_for, Model.TopicFor 
   end
 
-  def remap(%Model.Topic{} = topic, lang) do
+  def remap(%{} = topic, lang) do
     %{
       id: topic.id,
       name: Map.from_struct(topic)[String.to_existing_atom("name_" <> lang)] || topic.name_sv

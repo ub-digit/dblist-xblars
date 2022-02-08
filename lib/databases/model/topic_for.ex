@@ -5,7 +5,9 @@ defmodule Databases.Model.TopicFor do
 
   schema "topic_for" do
     belongs_to :database, Model.Database
-    belongs_to :topic, Model.Topic
+    #belongs_to :topic, Model.Topic
+    field :topic_id, :integer
+    field :sub_topic_id, :integer
   end
 
   @doc false
