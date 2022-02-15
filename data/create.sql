@@ -3,6 +3,7 @@ DROP TABLE alternative_titles;
 DROP TABLE alternative_title_for;
 DROP TABLE topics;
 DROP TABLE topic_for;
+DROP TABLE sub_topic_for;
 DROP TABLE publishers;
 DROP TABLE publisher_for;
 DROP TABLE urls;
@@ -81,7 +82,14 @@ CREATE TABLE topic_for (
     id serial PRIMARY KEY,
     database_id int,
     topic_id int,
-    sub_topic_id int
+    is_recommended boolean
+);
+
+CREATE TABLE sub_topic_for (
+    id serial PRIMARY KEY,
+    database_id int,
+    sub_topic_id int,
+    is_recommended boolean
 );
 
 CREATE TABLE topic_recommended_for (

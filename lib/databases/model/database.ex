@@ -18,6 +18,8 @@ defmodule Databases.Model.Database do
     has_many :publishers, through: [:publisher_for, :publisher]
     has_many :topic_for, Model.Database.TopicFor
     has_many :topics, through: [:topic_for, :topic]
+    has_many :sub_topic_for, Model.Database.SubTopicFor
+    has_many :sub_topics, through: [:sub_topic_for, :sub_topic]
     has_many :alternative_title_for, Model.AlternativeTitleFor
     has_many :alternative_titles, through: [:alternative_title_for, :alternative_title]
     has_many :urls_for, Model.UrlFor
@@ -28,18 +30,6 @@ defmodule Databases.Model.Database do
     has_many :terms_of_use, through: [:terms_of_use_for, :terms_of_use]
     has_many :media_type_for, Model.MediaTypeFor
     has_many :media_types, through: [:media_type_for, :media_types]
-  end
-
-  def remap(%Model.Database{} = database) do
-    %{
-      id: database.id,
-      title: database.title_en,
-      description: database.description_en,
-      is_popular: database.is_popular,
-      publishers: database.publishers |> Enum.map(&Model.Publisher.remap/1),
-      #topics: database.topics |> Enum.map(&Model.Topic.remap/1),
-      #topics_recommended: database.topics_recommended |> Enum.map(&Model.Topic.remap/1)
-    }
   end
 
   def remap(%Model.Database{description_en: description, title_en: title} = database, "en") do
@@ -71,11 +61,18 @@ defmodule Databases.Model.Database do
       access_information_code: database.access_information_code,
       malfunction_message_active: database.malfunction_message_active,
       malfunction_message: database.malfunction_message,
-      #topics: database.topics |> Enum.map(fn item -> Model.Topic.remap(item, lang) end),
-      #topic_recommended: database.topics_recommended |> Enum.map(fn item -> Model.Topic.remap(item, lang) end),
+      topics: database.topics |> Enum.map(fn item -> Model.Topic.remap(item, lang) end),
+      sub_topics: database.sub_topics |> Enum.map(fn item -> Model.SubTopic.remap(item, lang) end),
       terms_of_use: database.terms_of_use_for |> Enum.map(fn item -> Model.TermsOfUseFor.remap(item, database.terms_of_use, lang) end),
       media_types: database.media_types |> Enum.map(fn item -> Model.MediaType.remap(item, lang) end)
     }
+    |> sort_topics
+  end
+
+  def sort_topics(db) do
+    db
+    |> Map.put(:topics, Enum.map(db.topics, fn topic -> Map.put(topic, :sub_topics, Enum.filter(db.sub_topics, fn sub_topic -> sub_topic.topic_id == topic.id end)) end))
+    |> Map.delete(:sub_topics)
   end
 
   @doc false

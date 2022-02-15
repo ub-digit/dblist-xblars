@@ -1,11 +1,11 @@
-defmodule Databases.Model.TopicFor do
+defmodule Databases.Model.SubTopicFor do
   use Ecto.Schema
   import Ecto.Changeset
   alias Databases.Model
 
-  schema "topic_for" do
+  schema "sub_topic_for" do
     belongs_to :database, Model.Database
-    belongs_to :topic, Model.Topic
+    belongs_to :sub_topic, Model.SubTopic
     field :is_recommended, :boolean
   end
 
