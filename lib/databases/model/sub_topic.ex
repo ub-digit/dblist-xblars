@@ -7,7 +7,7 @@ defmodule Databases.Model.SubTopic do
       field :name_en, :string
       field :name_sv, :string
       field :topic_id, :integer
-      has_many :topic_for, Model.TopicFor 
+      has_many :sub_topic_for, Model.SubTopicFor 
     end
   
     def remap(%Model.SubTopic{} = sub_topic, lang) do
