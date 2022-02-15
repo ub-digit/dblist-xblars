@@ -18,7 +18,7 @@ defmodule Databases.Resource.Search do
     @index_prefix <> lang
   end
 
-  def create_index({:error, _}, _n), do: nil
+  def create_index({:error, _}, _n), do: nil #TODO: Handle error
   def create_index({:ok, true}, _n), do: nil
   def create_index({:ok, false}, index_name) do
     IO.inspect("Creating Index")
@@ -70,7 +70,6 @@ defmodule Databases.Resource.Search do
   end
   
   def search(%{params: params, filter: filter} = payload)  do
-    #IO.inspect(payload, label: "payload in search")
     lang = params["lang"]
     filter = filter
     |> build_filter
@@ -83,11 +82,24 @@ defmodule Databases.Resource.Search do
     |> Map.get(:body)
     |> get_in(["hits", "hits"])
     |> Enum.map(fn item -> Map.get(item, "_source") end)
+    |> sort_result(params["sort_order"])
     |> remap(get_total_documents(lang))
     
   end
 
-  # TODO: when fixed in frontend, change to correct parameter names
+  def sort_result(dbs, "asc") do
+    IO.inspect("Sort order asc")
+    dbs
+    |> Enum.sort_by(fn db -> db["title"] end)
+  end
+
+  def sort_result(dbs, "desc") do
+    IO.inspect("Sort order desc")
+    dbs
+    |> Enum.sort_by(fn db -> db["title"] end)
+    |> Enum.reverse
+  end
+
   def remap_payload(%{} = payload) do
     #IO.inspect(payload, label: "payload in remap payload")
     %{
@@ -98,10 +110,10 @@ defmodule Databases.Resource.Search do
       },
       filter: %{
         "id"                    => payload["id"],
-        "topics.id"             => payload["topics"],
+        "topics.id"             => payload["topic"],
         "topics.sub_topics.id"  => payload["sub_topics"],
         "media_type.id"         => payload["mediatype"],
-        "public_access"         => payload["show_free"],
+        "public_access"         => payload["show_free"] || nil,
         "is_popular"            => payload["is_popular"]
       }
     }
@@ -113,40 +125,29 @@ defmodule Databases.Resource.Search do
 
   def remap(res, total_docs) do
     %{
-       _meta: %{total: total_docs, found: length(res)},
-       data: res,
-       filters:
-        %{mediatypes:
-        [
-          %{
-            id: 1,
-            name: "Media type 1"
-          }
-        ],
-        topics: get_topics(res),
-        top:
-        [
-          %{
-            id: 1,
-            name: "Economy",
-            sub_topics: [
-              %{
-                id: 2,
-                name: "Sub topic"
-              }
-            ]
-          }
-        ]
-        
-      }
+      _meta: %{total: total_docs, found: length(res)},
+      data: res,
+      filters:
+        %{
+          mediatypes: get_media_types(res),
+          topics: get_topics(res)
+        }
      }
   end
 
-  def get_topics(databases) do
+  def get_topics(databases) do 
     databases
+    |> IO.inspect(label: "Res")
     |> Enum.map(fn db -> db["topics"] end)
     |> List.flatten
-    #|> IO.inspect(label: "Topics")
+    |> Enum.uniq
+  end
+
+  def get_media_types(databases) do
+    databases
+    |> Enum.map(fn db -> db["media_types"] end)
+    |> List.flatten
+    |> Enum.uniq
   end
 
   def add_filter(nil, q), do: q 
@@ -178,7 +179,7 @@ defmodule Databases.Resource.Search do
   end
 
   def b() do
-    %{
+    q = %{
       query: %{
         bool: %{
           must: [
@@ -198,15 +199,13 @@ defmodule Databases.Resource.Search do
           ]
         }
       }
-    }
-  end
-
-  def s(lang) do
-    Elastix.Search.search(@elastic_url, "db", [lang], b())
-  end
-
-  def t({"heu", 20}) do
-    ""
+     }
+    Elastix.Search.search(@elastic_url, get_index("en"), ["_doc"], q)
+    |> elem(1)
+    |> IO.inspect
+    |> Map.get(:body)
+    |> get_in(["hits", "hits"])
+    #|> Enum.map(fn item -> Map.get(item. "title") end)
   end
 end
 

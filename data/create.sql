@@ -33,10 +33,10 @@ CREATE TABLE alternative_titles (
 );
 
 CREATE TABLE alternative_title_for (
+    id serial PRIMARY KEY,
     alternative_title_id int,
     database_id int
 );
-
 
 CREATE TABLE terms_of_use (
     id serial PRIMARY KEY,
@@ -84,7 +84,6 @@ CREATE TABLE topic_for (
     sub_topic_id int
 );
 
-
 CREATE TABLE topic_recommended_for (
     id serial PRIMARY KEY,
     database_id int,
@@ -99,10 +98,10 @@ CREATE TABLE publishers (
 );
 
 CREATE TABLE publisher_for (
+    id serial PRIMARY KEY,
     database_id int,
     publisher_id int
 );
-
 
 CREATE TABLE media_types (
     id serial PRIMARY KEY,
@@ -111,6 +110,7 @@ CREATE TABLE media_types (
 );
 
 CREATE TABLE media_type_for (
+    id serial PRIMARY KEY,
     database_id int,
     media_type_id int
 );

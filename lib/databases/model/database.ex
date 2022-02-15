@@ -57,22 +57,6 @@ defmodule Databases.Model.Database do
     |> Map.delete(:title_sv)
     |> remap("sv")
   end
-"""
-  def remap_old(%{description: _, title: _} = database, lang) do
-    %{
-      id: database.id,
-      title: database.title,
-      description: database.description,
-      is_popular: database.is_popular,
-      alternative_titles: database.alternative_titles |> Enum.map(&Databases.Model.AlternativeTitle.remap/1),
-      urls: database.urls |> Enum.map(&Databases.Model.Url.remap/1),
-      publishers: database.publishers |> Enum.map(fn item -> Model.Publisher.remap(item, lang) end),
-      topics: database.topics |> Enum.map(fn item -> Model.Topic.remap(item, lang) end),
-      topic_recommended: database.topics_recommended |> Enum.map(fn item -> Model.Topic.remap(item, lang) end),
-      terms_of_use: database.terms_of_use_for |> Enum.map(fn item -> Model.TermsOfUseFor.remap(item, database.terms_of_use, lang) end)
-    }
-  end
-"""
 
   def remap(%{description: _, title: _} = database, lang) do
     %{
@@ -94,21 +78,6 @@ defmodule Databases.Model.Database do
     }
   end
 
-  """
-
-  def remap2(db) do
-    database = db.database
-    
-    %{
-      id: database.id,
-      title: database.title_en,
-      description: database.description_en,
-      is_popular: database.is_popular,
-      publishers: database.publishers |> Enum.map(&Model.Publisher.remap/1),
-      topics: database.topics |> Enum.map(&Model.Topic.remap/1)
-    }
-  end
-"""
   @doc false
   def changeset(database, attrs) do
     database

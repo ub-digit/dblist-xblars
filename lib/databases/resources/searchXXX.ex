@@ -109,8 +109,4 @@ defmodule Databases.Resource.SearchXXX do
   end
 
   #payload=%7B%22topicsfirstlevel%22:null,%22topicsSecondLevel%22:[],%22mediatype%22:null,%22show_free%22:false,%22sortOrder%22:%22asc%22,%22search%22:null,%22lang%22:%22en%22%7D
-
-  
-  
 end
-

@@ -39,9 +39,9 @@ defmodule Databases.Resource.SearchWorking do
 
   def search(%{"search" => _} = payload) when not is_map_key(payload, "lang") do
     IO.inspect("LANG MAP KEY MISSING")
-
     search(Map.put(payload, "lang", @default_language)) 
   end
+
   #def search(%{} = payload), do: do_search(Map.merge(%{"search" => Map.get(payload, "search", "*")}, payload))
   def search(%{"search" => nil} = payload) when is_map_key(payload, "search") do
     IO.inspect("Search is NIL")

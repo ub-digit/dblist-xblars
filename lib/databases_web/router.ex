@@ -17,19 +17,15 @@ defmodule DatabasesWeb.Router do
   scope "/", DatabasesWeb do
     pipe_through :browser
 
-    #get "/", PageController, :index
     get "/", DatabaseController, :index
     get "/databases/popular", DatabaseController, :get_popular_databases
     get "/databases", DatabaseController, :index
-    #get "/databases", DatabaseController, :index_with_lang
-    #get "/database/:lang", DatabaseController, :index_with_lang
     get "/databases/:id", DatabaseController, :show
-    get "/publisher", PublisherController, :index
     get "/relations", DatabaseController, :show_database_publisher 
-    get "/topics/:lang", TopicController, :index
+    get "/publisher", PublisherController, :index
+    get "/topics", TopicController, :index
     get "/search/:lang/", SearchController, :index_with_lang
     get "/search/:lang/:term", SearchController, :index_with_lang
-    get "/search/:term", SearchController, :test_search
 
   end
 
@@ -47,7 +43,6 @@ defmodule DatabasesWeb.Router do
   # as long as you are also using SSL (which you should anyway).
   if Mix.env() in [:dev, :test] do
     import Phoenix.LiveDashboard.Router
-
     scope "/" do
       pipe_through :browser
       live_dashboard "/dashboard", metrics: DatabasesWeb.Telemetry
