@@ -2,7 +2,7 @@ defmodule Databases.Resource.Search do
   import Ecto.Query
   import Ecto
   @elastic_url "http://localhost:9200"
-  @query_limit 500
+  @query_limit 1000
   @default_language "en"
   @index_prefix "db_"
 
@@ -21,21 +21,16 @@ defmodule Databases.Resource.Search do
   def create_index({:error, _}, _n), do: nil #TODO: Handle error
   def create_index({:ok, true}, _n), do: nil
   def create_index({:ok, false}, index_name) do
-    IO.inspect("Creating Index")
     Elastix.Index.create(@elastic_url, index_name, %{})
   end
 
   def show(%{"id" => id} = payload) do
-    search(payload)
-    |> Map.get(:data)
-    |> Enum.fetch(0)
-    |> elem(1)
+    search_index(payload)
+    |> List.first
   end
 
   def popular_databases(lang \\ @default_language) do
-    search(%{"is_popular" => true, "lang" => lang})
-    |> Map.get(:data)
-    #|> IO.inspect(label: "ispopular")
+    search_index(%{"is_popular" => true, "lang" => lang})
   end
 
   def base(term \\ "*") do
@@ -56,52 +51,45 @@ defmodule Databases.Resource.Search do
     }
   end
 
-  def get_total_documents(lang) do
-    Elastix.Search.count(@elastic_url, get_index(lang), ["_doc"], %{})
+  def get_total_documents() do
+    Elastix.Search.count(@elastic_url, get_index(@default_language), ["_doc"], %{})
     |> elem(1)
     |> Map.get(:body)
     |> Map.get("count")
   end
   
-  def search(%{} = payload \\ %{}) when not is_map_key(payload, :params)do
-    payload
-    |> remap_payload
-    |> search
-  end
-  
-  def search(%{params: params, filter: filter} = payload)  do
+  def search_index(payload \\ %{})  do
+    %{params: params, filter: filter} = remap_payload(payload)
     lang = params["lang"]
-    filter = filter
-    |> build_filter
+    filter = build_filter(filter)
     q = base(params["search"])
     q = add_filter(filter, q)
-    IO.inspect(q, label: "q")
     Elastix.Search.search(@elastic_url, get_index(lang), ["_doc"], q)
     |> elem(1)
-    #|> IO.inspect
     |> Map.get(:body)
     |> get_in(["hits", "hits"])
     |> Enum.map(fn item -> Map.get(item, "_source") end)
-    |> sort_result(params["sort_order"])
-    |> remap(get_total_documents(lang))
-    
+    |> sort_result(params["sort_order"]) # Move to elastic query? 
   end
 
+  def search(payload \\ %{}) do
+    payload
+    |> search_index
+    |> remap(payload)
+  end
+ 
   def sort_result(dbs, "asc") do
-    IO.inspect("Sort order asc")
     dbs
     |> Enum.sort_by(fn db -> db["title"] end)
   end
 
   def sort_result(dbs, "desc") do
-    IO.inspect("Sort order desc")
     dbs
     |> Enum.sort_by(fn db -> db["title"] end)
     |> Enum.reverse
   end
 
   def remap_payload(%{} = payload) do
-    #IO.inspect(payload, label: "payload in remap payload")
     %{
       params: %{
         "search"                => payload["search"] || "",
@@ -111,36 +99,76 @@ defmodule Databases.Resource.Search do
       filter: %{
         "id"                    => payload["id"],
         "topics.id"             => payload["topic"],
-        "topics.sub_topics.id"  => payload["sub_topics"],
-        "media_type.id"         => payload["mediatype"],
+        "topics.sub_topics.id"  => payload["sub_topics"] || [],
+        "media_types.id"         => payload["mediatype"],
         "public_access"         => payload["show_free"] || nil,
         "is_popular"            => payload["is_popular"]
       }
     }
-
   end
 
   def has_filter([]), do: nil
   def has_filter(list), do: list    
 
-  def remap(res, total_docs) do
+  def remap(databases, payload) do
     %{
-      _meta: %{total: total_docs, found: length(res)},
-      data: res,
+      _meta: %{total: get_total_documents(), found: length(databases)},
+      data: databases,
       filters:
         %{
-          mediatypes: get_media_types(res),
-          topics: get_topics(res)
+          mediatypes: get_media_types(databases),
+          topics: get_topics(payload)
         }
      }
   end
 
-  def get_topics(databases) do 
-    databases
-    |> IO.inspect(label: "Res")
+  def get_topics(payload) do
+    sub_topics = Map.get(payload, "sub_topics", [])
+    IO.inspect(sub_topics, label: "sub_topics in get_topics")
+    topic = Map.get(payload, "topic")
+    IO.inspect(topic, label: "topics in get_topics")
+    payload = Map.delete(payload, "sub_topics")
+    payload
+    |> remap_payload
+    topics = load_topics(payload, topic, sub_topics)
+  end
+
+  def load_topics(payload, nil, []) do
+    sort_topics(search_index(payload))
+    |> Enum.map(fn item -> mark_sub_topics(item) end)
+  end
+
+  def mark_sub_topics(item) do
+    sub_topics = Map.get(item, "sub_topics")
+    |> Enum.map(fn st -> Map.put(st, "selected", false) end)
+    Map.put(item, "sub_topics", sub_topics)
+  end
+
+  def load_topics(payload, topic, sub_topics) do
+    topics = sort_topics(search_index(payload))
+    |> List.first
+    st = Map.get(topics, "sub_topics")
+    |> Enum.map(fn item -> mark_selected(item, sub_topics) end)
+    [Map.put(topics, "sub_topics", st)]
+  end
+
+  def mark_selected(item, st_list) do
+    item
+    |> Map.put("selected", Enum.member?(st_list, Map.get(item, "id")))
+  end
+
+  def sort_topics(databases) do
+    #generate list of topics in search result
+    topics = databases
     |> Enum.map(fn db -> db["topics"] end)
     |> List.flatten
+    sub_topics = topics
+    |> Enum.map(fn topic -> Map.get(topic, "sub_topics") end)
+    |> List.flatten
+    topics
+    |> Enum.map(fn item -> Map.delete(item, "sub_topics") end)
     |> Enum.uniq
+    |> Enum.map(fn topic -> Map.put(topic, "sub_topics", Enum.filter(sub_topics, fn st -> st["topic_id"] == topic["id"] end)) end)
   end
 
   def get_media_types(databases) do
@@ -168,44 +196,18 @@ defmodule Databases.Resource.Search do
     |> List.flatten
     |> has_filter
   end
+
   # when filter item is a list, split list into seperate items
   def format_filter_item({k, v} = item) when is_list(v) do
-    v
-    |> Enum.map(fn val -> %{match: %{k => val}} end)
+    %{
+      bool: %{
+        should: List.flatten(Enum.map(v, fn val -> %{match: %{k => val}} end))
+      }
+    }
   end
 
   def format_filter_item({k, v} = item) do
     %{match: %{k => v}}
-  end
-
-  def b() do
-    q = %{
-      query: %{
-        bool: %{
-          must: [
-            %{
-                query_string: %{
-                  query: "*",
-                  fields: ["title", "description", "topics.name"]
-              } 
-            } 
-          ],
-          filter: [
-            %{
-              match: %{
-                "public_access" => true
-              }
-            }
-          ]
-        }
-      }
-     }
-    Elastix.Search.search(@elastic_url, get_index("en"), ["_doc"], q)
-    |> elem(1)
-    |> IO.inspect
-    |> Map.get(:body)
-    |> get_in(["hits", "hits"])
-    #|> Enum.map(fn item -> Map.get(item. "title") end)
   end
 end
 

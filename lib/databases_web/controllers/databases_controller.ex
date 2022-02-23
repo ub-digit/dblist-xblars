@@ -3,7 +3,7 @@ defmodule DatabasesWeb.DatabaseController do
   
     def index(conn, params) do
       payload = Jason.decode!(Map.get(params, "payload"))
-      IO.inspect(payload, label: "PAYLOAD IN")
+      IO.inspect(payload, label: "PAYLOAD IN index db controller")
       databases = Jason.encode!(Databases.Resource.Search.search(payload))
       text conn, databases
     end
