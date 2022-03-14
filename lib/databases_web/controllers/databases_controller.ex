@@ -1,9 +1,17 @@
 defmodule DatabasesWeb.DatabaseController do
     use DatabasesWeb, :controller
+
+    def lars(conn, params) do
+
+      elastic_url = System.get_env("ELASTIC_SEARCH_URL", "No sys env value found")
+      text conn, "Hello from dockers! " <> elastic_url
+    end
   
     def index(conn, params) do
-      payload = Jason.decode!(Map.get(params, "payload"))
-      IO.inspect(payload, label: "PAYLOAD IN index db controller")
+      payload = case params do
+        %{"payload" => p} -> Jason.decode!(p)
+        _ -> %{}
+      end
       databases = Jason.encode!(Databases.Resource.Search.search(payload))
       text conn, databases
     end

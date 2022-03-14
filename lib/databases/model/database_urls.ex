@@ -1,12 +1,12 @@
-defmodule Databases.Model.Url do
+defmodule Databases.Model.DatabaseUrl do
     use Ecto.Schema
     import Ecto.Changeset
     alias Databases.Model
   
-    schema "urls" do
+    schema "database_urls" do
       field :title, :string
+      belongs_to :database, Databases.Model.Database 
       field :url, :string
-      has_many :url_for, Model.UrlFor 
     end
   
     def remap(url) do

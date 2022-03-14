@@ -2,18 +2,21 @@ DROP TABLE databases;
 DROP TABLE alternative_titles;
 DROP TABLE alternative_title_for;
 DROP TABLE topics;
-DROP TABLE topic_for;
-DROP TABLE sub_topic_for;
+DROP TABLE database_topics;
+DROP TABLE database_topics;
+DROP TABLE sub_database_topics;
 DROP TABLE publishers;
 DROP TABLE publisher_for;
 DROP TABLE urls;
 DROP TABLE url_for;
+DROP TABLE database_urls;
 DROP TABLE terms_of_use;
 DROP TABLE terms_of_use_for;
 DROP TABLE topic_recommended_for;
 DROP TABLE media_types;
 DROP TABLE media_type_for;
 DROP TABLE sub_topics;
+DROP TABLE database_publishers;
 
 CREATE TABLE databases (
     id serial PRIMARY KEY,
@@ -53,17 +56,13 @@ CREATE TABLE terms_of_use_for (
     terms_of_use_id int
 );
 
-CREATE TABLE urls (
+CREATE TABLE database_urls (
     id serial PRIMARY KEY,
+    database_id int,
     title text,
     url text
 );
 
-CREATE TABLE url_for (
-    id serial PRIMARY KEY,
-    url_id int,
-    database_id int
-);
 
 CREATE TABLE topics (
     id serial PRIMARY KEY,
@@ -78,14 +77,22 @@ CREATE TABLE sub_topics (
     topic_id int
 );
 
-CREATE TABLE topic_for (
+CREATE TABLE database_topics (
     id serial PRIMARY KEY,
     database_id int,
     topic_id int,
     is_recommended boolean
 );
 
-CREATE TABLE sub_topic_for (
+CREATE TABLE database_topic (
+    id serial PRIMARY KEY,
+    database_id int,
+    topic_id int,
+    is_recommended boolean
+);
+
+
+CREATE TABLE sub_database_topics (
     id serial PRIMARY KEY,
     database_id int,
     sub_topic_id int,
@@ -105,7 +112,7 @@ CREATE TABLE publishers (
     title_sv text
 );
 
-CREATE TABLE publisher_for (
+CREATE TABLE database_publishers (
     id serial PRIMARY KEY,
     database_id int,
     publisher_id int

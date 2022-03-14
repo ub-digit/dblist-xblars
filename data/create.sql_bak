@@ -2,7 +2,7 @@ DROP TABLE databases;
 DROP TABLE alternative_titles;
 DROP TABLE alternative_title_for;
 DROP TABLE topics;
-DROP TABLE topic_for;
+DROP TABLE database_topics;
 DROP TABLE publishers;
 DROP TABLE publisher_for;
 DROP TABLE urls;
@@ -77,7 +77,7 @@ CREATE TABLE sub_topics (
     topic_id int
 );
 
-CREATE TABLE topic_for (
+CREATE TABLE database_topics (
     id serial PRIMARY KEY,
     database_id int,
     topic_id int,

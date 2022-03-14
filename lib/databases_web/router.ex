@@ -17,6 +17,7 @@ defmodule DatabasesWeb.Router do
   scope "/", DatabasesWeb do
     pipe_through :browser
 
+    get "/lars", DatabaseController, :lars 
     get "/", DatabaseController, :index
     get "/databases/popular", DatabaseController, :get_popular_databases
     get "/databases", DatabaseController, :index

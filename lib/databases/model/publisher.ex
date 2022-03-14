@@ -6,7 +6,7 @@ defmodule Databases.Model.Publisher do
   schema "publishers" do
     field :title_en, :string
     field :title_sv, :string
-    has_many :publisher_for, Model.PublisherFor 
+    has_many :database_publishers, Model.DatabasePublisher 
   end
 
   def remap(%Model.Publisher{} = publisher, lang \\ "sv") do

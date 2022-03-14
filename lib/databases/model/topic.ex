@@ -6,7 +6,7 @@ defmodule Databases.Model.Topic do
   schema "topics" do
     field :name_en, :string
     field :name_sv, :string
-    has_many :topic_for, Model.TopicFor 
+    has_many :database_topics, Model.DatabaseTopic 
   end
 
   def remap(%{} = topic, lang) do

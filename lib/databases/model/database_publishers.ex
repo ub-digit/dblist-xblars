@@ -1,9 +1,9 @@
-defmodule Databases.Model.PublisherFor do
+defmodule Databases.Model.DatabasePublisher do
     use Ecto.Schema
     import Ecto.Changeset
     alias Databases.Model
   
-    schema "publisher_for" do
+    schema "database_publishers" do
       belongs_to :database, Model.Database
       belongs_to :publisher, Model.Publisher
     end

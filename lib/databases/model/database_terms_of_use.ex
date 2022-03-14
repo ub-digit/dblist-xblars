@@ -1,4 +1,4 @@
-defmodule Databases.Model.TermsOfUseFor do
+defmodule Databases.Model.DatabaseTermsOfUse do
     use Ecto.Schema
     import Ecto.Changeset
     alias Databases.Model
@@ -11,13 +11,13 @@ defmodule Databases.Model.TermsOfUseFor do
       field :permitted, :boolean
     end
 
-    def remap(%Model.TermsOfUseFor{description_en: description} = terms_of_use_for, terms_of_use, "en") do
+    def remap(%Model.DatabaseTermsOfUse{description_en: description} = terms_of_use_for, terms_of_use, "en") do
       Map.put(terms_of_use_for, :description, description)
       |> Map.delete(:description_en)
       |> remap(terms_of_use)
     end
 
-    def remap(%Model.TermsOfUseFor{description_sv: description} = terms_of_use_for, terms_of_use, "sv") do
+    def remap(%Model.DatabaseTermsOfUse{description_sv: description} = terms_of_use_for, terms_of_use, "sv") do
       Map.put(terms_of_use_for, :description, description)
       |> Map.delete(:description_sv)
       |> remap(terms_of_use)

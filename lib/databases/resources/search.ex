@@ -1,29 +1,34 @@
 defmodule Databases.Resource.Search do
   import Ecto.Query
   import Ecto
-  @elastic_url "http://localhost:9200"
   @query_limit 1000
   @default_language "en"
   @index_prefix "db_"
 
   def index_all(data, lang) do
     index_name = get_index(lang) 
-    create_index(Elastix.Index.exists?(@elastic_url, index_name), index_name)
+    create_index(Elastix.Index.exists?(elastic_url, index_name), index_name)
     IO.inspect(lang, label: "INDEX ALL")
     uuid = Ecto.UUID.generate()
-    Enum.map(data, fn item -> Elastix.Document.index(@elastic_url, index_name, "_doc", item.id, item) end)
+    Enum.map(data, fn item -> Elastix.Document.index(elastic_url, index_name, "_doc", item.id, item) end)
   end
-
+  
+  def elastic_url do
+    System.get_env("ELASTIC_SEARCH_URL", "http://localhost:9200")
+  end
+  
   def get_index(lang) do
     @index_prefix <> lang
   end
 
-  def create_index({:error, _}, _n), do: nil #TODO: Handle error
-  def create_index({:ok, true}, _n), do: nil
-  def create_index({:ok, false}, index_name) do
-    Elastix.Index.create(@elastic_url, index_name, %{})
+  def create_index({:error, _} = res, _n) do
+    IO.inspect(elastic_url, label: "ERROR CREATING INDEX!")
   end
 
+  def create_index({:ok, true}, _n), do: nil
+  def create_index({:ok, false}, index_name) do
+    Elastix.Index.create(elastic_url, index_name, %{})
+  end
   def show(%{"id" => id} = payload) do
     search_index(payload)
     |> List.first
@@ -52,7 +57,7 @@ defmodule Databases.Resource.Search do
   end
 
   def get_total_documents() do
-    Elastix.Search.count(@elastic_url, get_index(@default_language), ["_doc"], %{})
+    Elastix.Search.count(elastic_url, get_index(@default_language), ["_doc"], %{})
     |> elem(1)
     |> Map.get(:body)
     |> Map.get("count")
@@ -64,7 +69,7 @@ defmodule Databases.Resource.Search do
     filter = build_filter(filter)
     q = base(params["search"])
     q = add_filter(filter, q)
-    Elastix.Search.search(@elastic_url, get_index(lang), ["_doc"], q)
+    Elastix.Search.search(elastic_url, get_index(lang), ["_doc"], q)
     |> elem(1)
     |> Map.get(:body)
     |> get_in(["hits", "hits"])
@@ -107,37 +112,33 @@ defmodule Databases.Resource.Search do
     }
   end
 
-  def has_filter([]), do: nil
-  def has_filter(list), do: list    
-
+  
   def remap(databases, payload) do
     %{
       _meta: %{total: get_total_documents(), found: length(databases)},
       data: databases,
       filters:
-        %{
-          mediatypes: get_media_types(databases),
-          topics: get_topics(payload)
-        }
-     }
+      %{
+        mediatypes: get_media_types(databases),
+        topics: get_topics(payload)
+      }
+    }
   end
-
+  
   def get_topics(payload) do
     sub_topics = Map.get(payload, "sub_topics", [])
-    IO.inspect(sub_topics, label: "sub_topics in get_topics")
     topic = Map.get(payload, "topic")
-    IO.inspect(topic, label: "topics in get_topics")
     payload = Map.delete(payload, "sub_topics")
     payload
     |> remap_payload
     topics = load_topics(payload, topic, sub_topics)
   end
-
+  
   def load_topics(payload, nil, []) do
     sort_topics(search_index(payload))
     |> Enum.map(fn item -> mark_sub_topics(item) end)
   end
-
+  
   def mark_sub_topics(item) do
     sub_topics = Map.get(item, "sub_topics")
     |> Enum.map(fn st -> Map.put(st, "selected", false) end)
@@ -151,12 +152,12 @@ defmodule Databases.Resource.Search do
     |> Enum.map(fn item -> mark_selected(item, sub_topics) end)
     [Map.put(topics, "sub_topics", st)]
   end
-
+  
   def mark_selected(item, st_list) do
     item
     |> Map.put("selected", Enum.member?(st_list, Map.get(item, "id")))
   end
-
+  
   def sort_topics(databases) do
     #generate list of topics in search result
     topics = databases
@@ -170,7 +171,7 @@ defmodule Databases.Resource.Search do
     |> Enum.uniq
     |> Enum.map(fn topic -> Map.put(topic, "sub_topics", Enum.filter(sub_topics, fn st -> st["topic_id"] == topic["id"] end)) end)
   end
-
+  
   def get_media_types(databases) do
     databases
     |> Enum.map(fn db -> db["media_types"] end)
@@ -178,6 +179,9 @@ defmodule Databases.Resource.Search do
     |> Enum.uniq
   end
 
+  def has_filter([]), do: nil
+  def has_filter(list), do: list    
+  
   def add_filter(nil, q), do: q 
   def add_filter([], q), do: q 
 

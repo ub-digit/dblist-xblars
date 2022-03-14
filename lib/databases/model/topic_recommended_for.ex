@@ -11,8 +11,8 @@ defmodule Databases.Model.TopicRecommendedFor do
   end
 
   @doc false
-  def changeset(topic_for, attrs) do
-      topic_for
+  def changeset(database_topics, attrs) do
+      database_topics
     |> cast(attrs, [:database_id, :topic_id_id])
   end
 end

@@ -5,7 +5,7 @@ defmodule Databases.Model.TermsOfUse do
   
     schema "terms_of_use" do
       field :code, :string
-      has_many :terms_of_use_for, Model.TermsOfUseFor 
+      has_many :terms_of_use_for, Model.DatabaseTermsOfUse 
     end
   
     def remap(%Model.TermsOfUse{} = tou) do

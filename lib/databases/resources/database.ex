@@ -21,15 +21,15 @@ defmodule Databases.Resource.Database do
   
   def db_base() do
     res = (from db in Model.Database,
-    left_join: t_for in Model.TopicFor,
+    left_join: t_for in Model.DatabaseTopic,
     on: t_for.database_id == db.id,
     left_join: t in Model.Topic,
     on: t.id == t_for.topic_id,
-    left_join: st_for in Model.SubTopicFor,
+    left_join: st_for in Model.DatabaseSubTopic,
     on: st_for.database_id == db.id,
     left_join: st in Model.SubTopic,
     on: st.id == st_for.sub_topic_id,
-    left_join: db_pb in Databases.Model.PublisherFor,
+    left_join: db_pb in Databases.Model.DatabasePublisher,
     on: db_pb.database_id == db.id,
     left_join: pb in Databases.Model.Publisher,
     on: pb.id == db_pb.publisher_id,
@@ -37,11 +37,9 @@ defmodule Databases.Resource.Database do
     on: alt_title_for.database_id == db.id,
     left_join: alt_title in Databases.Model.AlternativeTitle,
     on: alt_title.id == alt_title_for.alternative_title_id,
-    left_join: url_for in Model.UrlFor,
-    on: url_for.database_id == db.id,
-    left_join: url in Model.Url,
-    on: url.id == url_for.url_id,
-    left_join: tou_for in Model.TermsOfUseFor,
+    left_join: database_urls in Model.DatabaseUrl,
+    on: database_urls.database_id == db.id,
+    left_join: tou_for in Model.DatabaseTermsOfUse,
     on: tou_for.database_id == db.id,
     left_join: tou in Model.TermsOfUse,
     on: tou.id == tou_for.terms_of_use_id,
@@ -49,7 +47,7 @@ defmodule Databases.Resource.Database do
     on: media_type_for.database_id == db.id,
     left_join: mt in Databases.Model.MediaType,
     on: mt.id == media_type_for.media_type_id,
-    preload: [sub_topics: st, topics: t, publishers: pb, alternative_titles: alt_title, urls: url, urls_for: url_for, terms_of_use: tou, terms_of_use_for: tou_for, media_types: mt])  
+    preload: [:database_urls, sub_topics: st, topics: t, publishers: pb, alternative_titles: alt_title, terms_of_use: tou, database_terms_of_use: tou_for, media_types: mt])  
   end
   
   def popular_databases(lang) do

@@ -14,20 +14,19 @@ defmodule Databases.Model.Database do
     field :access_information_code, :string
     field :malfunction_message_active, :boolean
     field :malfunction_message, :string
-    has_many :publisher_for, Model.PublisherFor
-    has_many :publishers, through: [:publisher_for, :publisher]
-    has_many :topic_for, Model.Database.TopicFor
-    has_many :topics, through: [:topic_for, :topic]
-    has_many :sub_topic_for, Model.Database.SubTopicFor
-    has_many :sub_topics, through: [:sub_topic_for, :sub_topic]
+    has_many :database_publishers, Model.DatabasePublisher
+    has_many :publishers, through: [:database_publishers, :publisher]
+    has_many :database_topics, Model.DatabaseTopic
+    has_many :topics, through: [:database_topics, :topic]
+    has_many :database_sub_topics, Model.DatabaseSubTopic
+    has_many :sub_topics, through: [:database_sub_topics, :sub_topic]
     has_many :alternative_title_for, Model.AlternativeTitleFor
     has_many :alternative_titles, through: [:alternative_title_for, :alternative_title]
-    has_many :urls_for, Model.UrlFor
-    has_many :urls, through: [:urls_for, :urls]
+    has_many :database_urls, Model.DatabaseUrl
     has_many :topic_recommended_for, Model.TopicRecommendedFor
     has_many :topics_recommended, through: [:topic_recommended_for, :topic]
-    has_many :terms_of_use_for, Model.TermsOfUseFor
-    has_many :terms_of_use, through: [:terms_of_use_for, :terms_of_use]
+    has_many :database_terms_of_use, Model.DatabaseTermsOfUse
+    has_many :terms_of_use, through: [:database_terms_of_use, :terms_of_use]
     has_many :media_type_for, Model.MediaTypeFor
     has_many :media_types, through: [:media_type_for, :media_types]
   end
@@ -55,7 +54,7 @@ defmodule Databases.Model.Database do
       description: database.description,
       is_popular: database.is_popular,
       alternative_titles: database.alternative_titles |> Enum.map(&Databases.Model.AlternativeTitle.remap/1),
-      urls: database.urls |> Enum.map(&Databases.Model.Url.remap/1),
+      urls: database.database_urls |> Enum.map(&Databases.Model.DatabaseUrl.remap/1),
       publishers: database.publishers |> Enum.map(fn item -> Model.Publisher.remap(item, lang) end),
       public_access: database.public_access,
       access_information_code: database.access_information_code,
@@ -63,7 +62,7 @@ defmodule Databases.Model.Database do
       malfunction_message: database.malfunction_message,
       topics: database.topics |> Enum.map(fn item -> Model.Topic.remap(item, lang) end),
       sub_topics: database.sub_topics |> Enum.map(fn item -> Model.SubTopic.remap(item, lang) end),
-      terms_of_use: database.terms_of_use_for |> Enum.map(fn item -> Model.TermsOfUseFor.remap(item, database.terms_of_use, lang) end),
+      terms_of_use: database.database_terms_of_use |> Enum.map(fn item -> Model.DatabaseTermsOfUse.remap(item, database.terms_of_use, lang) end),
       media_types: database.media_types |> Enum.map(fn item -> Model.MediaType.remap(item, lang) end)
     }
     |> sort_topics
@@ -82,3 +81,4 @@ defmodule Databases.Model.Database do
     |> validate_required([:title, :description])
   end
 end
+
