@@ -9,10 +9,18 @@ defmodule Databases.Model.DatabaseUrl do
       field :url, :string
     end
   
-    def remap(url) do
+# TODO: url should not be set twice
+    def remap(%{title: ""} = url, title) do
       %{
-        title: url.title,
-        link: url.url
+        title: title,
+        url: url.url
+      }
+    end
+
+    def remap(url, title) do
+      %{
+        title: title <> "(" <> url.title <> ")",
+        url: url.url
       }
     end
   

@@ -4,7 +4,7 @@ defmodule DatabasesWeb.DatabaseController do
     def lars(conn, params) do
 
       elastic_url = System.get_env("ELASTIC_SEARCH_URL", "No sys env value found")
-      text conn, "Hello from dockers! " <> elastic_url
+      text conn, "Hello from dockers! again " <> elastic_url
     end
   
     def index(conn, params) do

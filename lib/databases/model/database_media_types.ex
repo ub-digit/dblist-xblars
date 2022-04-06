@@ -1,9 +1,9 @@
-defmodule Databases.Model.MediaTypeFor do
+defmodule Databases.Model.DatabaseMediaType do
     use Ecto.Schema
     import Ecto.Changeset
     alias Databases.Model
   
-    schema "media_type_for" do
+    schema "database_media_types" do
       belongs_to :database, Model.Database
       belongs_to :media_type, Model.MediaType   
     end

@@ -33,21 +33,17 @@ defmodule Databases.Resource.Database do
     on: db_pb.database_id == db.id,
     left_join: pb in Databases.Model.Publisher,
     on: pb.id == db_pb.publisher_id,
-    left_join: alt_title_for in Databases.Model.AlternativeTitleFor,
-    on: alt_title_for.database_id == db.id,
-    left_join: alt_title in Databases.Model.AlternativeTitle,
-    on: alt_title.id == alt_title_for.alternative_title_id,
+    left_join: database_alternative_titles in Databases.Model.DatabaseAlternativeTitle,
+    on: database_alternative_titles.database_id == db.id,
     left_join: database_urls in Model.DatabaseUrl,
     on: database_urls.database_id == db.id,
-    left_join: tou_for in Model.DatabaseTermsOfUse,
-    on: tou_for.database_id == db.id,
-    left_join: tou in Model.TermsOfUse,
-    on: tou.id == tou_for.terms_of_use_id,
-    left_join: media_type_for in Databases.Model.MediaTypeFor,
-    on: media_type_for.database_id == db.id,
+    left_join: database_terms_of_use in Model.DatabaseTermsOfUse,
+    on: database_terms_of_use.database_id == db.id,
+    left_join: mt_db in Databases.Model.DatabaseMediaType,
+    on: mt_db.database_id == db.id,
     left_join: mt in Databases.Model.MediaType,
-    on: mt.id == media_type_for.media_type_id,
-    preload: [:database_urls, sub_topics: st, topics: t, publishers: pb, alternative_titles: alt_title, terms_of_use: tou, database_terms_of_use: tou_for, media_types: mt])  
+    on: mt.id == mt_db.media_type_id,
+    preload: [:database_alternative_titles, :database_terms_of_use, :database_urls, :database_media_types, :media_types, sub_topics: st, topics: t, database_publishers: db_pb, publishers: pb])  
   end
   
   def popular_databases(lang) do
@@ -70,5 +66,27 @@ defmodule Databases.Resource.Database do
     db_base()  
     |> Repo.all
     |> Enum.map(fn item -> Databases.Model.Database.remap(item,  lang) end)
+  end
+
+  def d do
+    (from db in Model.Database,
+    left_join: mt_db in Databases.Model.DatabaseMediaType,
+    on: mt_db.database_id == db.id,
+    left_join: mt in Databases.Model.MediaType,
+    on: mt.id == mt_db.media_type_id,
+    limit: 10,
+    preload: [:database_media_types, :media_types])
+    |> Repo.all
+  end
+
+  def rec do
+    (from db in Model.Database,
+    left_join: t_for in Model.DatabaseTopic,
+    on: t_for.database_id == db.id,
+    left_join: t in Model.Topic,
+    on: t.id == t_for.topic_id,
+    limit: 10,
+    preload: [:topics, :database_topics])
+    |> Repo.all
   end
 end

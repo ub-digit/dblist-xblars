@@ -6,7 +6,7 @@ defmodule Databases.Model.MediaType do
     schema "media_types" do
       field :name_en, :string
       field :name_sv, :string
-      has_many :media_type_for, Model.MediaTypeFor 
+      has_many :database_media_types, Model.DatabaseMediaType 
     end
   
     def remap(%Model.MediaType{} = media_type, lang \\ "sv") do

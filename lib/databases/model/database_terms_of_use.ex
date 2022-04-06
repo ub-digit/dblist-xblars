@@ -3,33 +3,32 @@ defmodule Databases.Model.DatabaseTermsOfUse do
     import Ecto.Changeset
     alias Databases.Model
   
-    schema "terms_of_use_for" do
+    schema "database_terms_of_use" do
       belongs_to :database, Model.Database
-      belongs_to :terms_of_use, Model.TermsOfUse
+      field :code, :string
       field :description_en, :string
       field :description_sv, :string
       field :permitted, :boolean
     end
 
-    def remap(%Model.DatabaseTermsOfUse{description_en: description} = terms_of_use_for, terms_of_use, "en") do
-      Map.put(terms_of_use_for, :description, description)
+    def remap(%Model.DatabaseTermsOfUse{description_en: description} = database_terms_of_use, "en") do
+      Map.put(database_terms_of_use, :description, description)
       |> Map.delete(:description_en)
-      |> remap(terms_of_use)
+      |> remap()
     end
 
-    def remap(%Model.DatabaseTermsOfUse{description_sv: description} = terms_of_use_for, terms_of_use, "sv") do
-      Map.put(terms_of_use_for, :description, description)
+    def remap(%Model.DatabaseTermsOfUse{description_sv: description} = database_terms_of_use, "sv") do
+      Map.put(database_terms_of_use, :description, description)
       |> Map.delete(:description_sv)
-      |> remap(terms_of_use)
+      |> remap()
     end
 
-    def remap(%{} = terms_of_use_for, terms_of_use) do
-      tou = Enum.find(terms_of_use, fn item -> item.id == terms_of_use_for.terms_of_use_id end)
+    def remap(%{} = database_terms_of_use) do
       %{
-        permitted: terms_of_use_for.permitted,
-        description: terms_of_use_for.description,
-        code: tou.code,
-        id: tou.id
+        permitted: database_terms_of_use.permitted,
+        description: database_terms_of_use.description,
+        code: database_terms_of_use.code,
+        id: database_terms_of_use.id
       }
     end
   

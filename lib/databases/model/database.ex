@@ -20,15 +20,14 @@ defmodule Databases.Model.Database do
     has_many :topics, through: [:database_topics, :topic]
     has_many :database_sub_topics, Model.DatabaseSubTopic
     has_many :sub_topics, through: [:database_sub_topics, :sub_topic]
-    has_many :alternative_title_for, Model.AlternativeTitleFor
-    has_many :alternative_titles, through: [:alternative_title_for, :alternative_title]
+    has_many :database_alternative_titles, Model.DatabaseAlternativeTitle
     has_many :database_urls, Model.DatabaseUrl
-    has_many :topic_recommended_for, Model.TopicRecommendedFor
-    has_many :topics_recommended, through: [:topic_recommended_for, :topic]
+    #has_many :topic_recommended_for, Model.TopicRecommendedFor
+    #has_many :topics_recommended, through: [:topic_recommended_for, :topic]
     has_many :database_terms_of_use, Model.DatabaseTermsOfUse
     has_many :terms_of_use, through: [:database_terms_of_use, :terms_of_use]
-    has_many :media_type_for, Model.MediaTypeFor
-    has_many :media_types, through: [:media_type_for, :media_types]
+    has_many :database_media_types, Model.DatabaseMediaType
+    has_many :media_types, through: [:database_media_types, :media_type]
   end
 
   def remap(%Model.Database{description_en: description, title_en: title} = database, "en") do
@@ -53,8 +52,8 @@ defmodule Databases.Model.Database do
       title: database.title,
       description: database.description,
       is_popular: database.is_popular,
-      alternative_titles: database.alternative_titles |> Enum.map(&Databases.Model.AlternativeTitle.remap/1),
-      urls: database.database_urls |> Enum.map(&Databases.Model.DatabaseUrl.remap/1),
+      alternative_titles: database.database_alternative_titles |> Enum.map(&Databases.Model.DatabaseAlternativeTitle.remap/1),
+      urls: database.database_urls |> Enum.map(fn item -> Databases.Model.DatabaseUrl.remap(item, database.title) end),
       publishers: database.publishers |> Enum.map(fn item -> Model.Publisher.remap(item, lang) end),
       public_access: database.public_access,
       access_information_code: database.access_information_code,
@@ -62,7 +61,7 @@ defmodule Databases.Model.Database do
       malfunction_message: database.malfunction_message,
       topics: database.topics |> Enum.map(fn item -> Model.Topic.remap(item, lang) end),
       sub_topics: database.sub_topics |> Enum.map(fn item -> Model.SubTopic.remap(item, lang) end),
-      terms_of_use: database.database_terms_of_use |> Enum.map(fn item -> Model.DatabaseTermsOfUse.remap(item, database.terms_of_use, lang) end),
+      terms_of_use: database.database_terms_of_use |> Enum.map(fn item -> Model.DatabaseTermsOfUse.remap(item, lang) end),
       media_types: database.media_types |> Enum.map(fn item -> Model.MediaType.remap(item, lang) end)
     }
     |> sort_topics

@@ -9,7 +9,6 @@ defmodule Databases.Resource.Search do
     index_name = get_index(lang) 
     create_index(Elastix.Index.exists?(elastic_url, index_name), index_name)
     IO.inspect(lang, label: "INDEX ALL")
-    uuid = Ecto.UUID.generate()
     Enum.map(data, fn item -> Elastix.Document.index(elastic_url, index_name, "_doc", item.id, item) end)
   end
   
@@ -35,6 +34,7 @@ defmodule Databases.Resource.Search do
   end
 
   def popular_databases(lang \\ @default_language) do
+    IO.inspect(lang, label: "lang in is poopular")
     search_index(%{"is_popular" => true, "lang" => lang})
   end
 
@@ -69,6 +69,7 @@ defmodule Databases.Resource.Search do
     filter = build_filter(filter)
     q = base(params["search"])
     q = add_filter(filter, q)
+    IO.inspect(q, label: "QUERY")
     Elastix.Search.search(elastic_url, get_index(lang), ["_doc"], q)
     |> elem(1)
     |> Map.get(:body)
@@ -126,12 +127,12 @@ defmodule Databases.Resource.Search do
   end
   
   def get_topics(payload) do
-    sub_topics = Map.get(payload, "sub_topics", [])
+    sub_topics_param = Map.get(payload, "sub_topics", [])
     topic = Map.get(payload, "topic")
     payload = Map.delete(payload, "sub_topics")
     payload
     |> remap_payload
-    topics = load_topics(payload, topic, sub_topics)
+    topics = load_topics(payload, topic, sub_topics_param)
   end
   
   def load_topics(payload, nil, []) do
@@ -141,6 +142,7 @@ defmodule Databases.Resource.Search do
   
   def mark_sub_topics(item) do
     sub_topics = Map.get(item, "sub_topics")
+    |> Enum.uniq
     |> Enum.map(fn st -> Map.put(st, "selected", false) end)
     Map.put(item, "sub_topics", sub_topics)
   end
@@ -150,6 +152,8 @@ defmodule Databases.Resource.Search do
     |> List.first
     st = Map.get(topics, "sub_topics")
     |> Enum.map(fn item -> mark_selected(item, sub_topics) end)
+    |> Enum.uniq
+    |> IO.inspect
     [Map.put(topics, "sub_topics", st)]
   end
   
@@ -213,5 +217,6 @@ defmodule Databases.Resource.Search do
   def format_filter_item({k, v} = item) do
     %{match: %{k => v}}
   end
+
 end
 
